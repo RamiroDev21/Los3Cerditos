@@ -12,6 +12,11 @@ const variants: Record<Variant, string> = {
 const base =
   "group/btn inline-flex h-12 shrink-0 items-center justify-center gap-2.5 rounded-full px-6 text-[0.9375rem] font-bold tracking-[0.01em] transition-[background-color,box-shadow,color,transform] duration-300 ease-(--ease-out-expo) active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45";
 
+/** Button look for elements that are not ButtonLink/Button (e.g. DirectionsButton). */
+export function buttonClass(variant: Variant = "pink", className = "") {
+  return `${base} ${variants[variant]} ${className}`;
+}
+
 type Common = { variant?: Variant; icon?: ReactNode; children: ReactNode; className?: string };
 
 /** Link styled as a button: every CTA that navigates (anchors, WhatsApp, phone). */

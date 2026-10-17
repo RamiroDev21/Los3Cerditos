@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
-import { layers, mapsUrl, video as videoConfig } from "@/lib/content";
+import { layers, video as videoConfig } from "@/lib/content";
 import { formatPrice, menu } from "@/lib/menu";
 import { greetingMessage, whatsappUrl } from "@/lib/whatsapp";
 import { getPerfTier, prefersReducedMotion } from "@/lib/device";
@@ -11,7 +11,8 @@ import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { heroState } from "@/lib/scroll-store";
 import { ImageSequence } from "@/lib/image-sequence";
 import { computeFrameRect, NIGHT, ScrubRenderer } from "@/lib/scrub-renderer";
-import { ButtonLink } from "@/components/ui/Button";
+import { ButtonLink, buttonClass } from "@/components/ui/Button";
+import { DirectionsButton } from "@/components/ui/DirectionsButton";
 import { ArrowRight, Pin, WhatsApp } from "@/components/ui/icons";
 import { LayerLegend } from "./LayerLegend";
 import { ScrollMeter, STAGES } from "./ScrollMeter";
@@ -325,16 +326,10 @@ export function Hero() {
             >
               Pedir por WhatsApp<span className="sr-only"> (se abre en otra pestaña)</span>
             </ButtonLink>
-            <ButtonLink
-              href={mapsUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="outline"
-              icon={<Pin size={19} />}
-              className="bg-navy-deep/55 backdrop-blur-sm max-sm:order-2 lg:px-5"
-            >
-              Cómo llegar<span className="sr-only"> (abre Google Maps en otra pestaña)</span>
-            </ButtonLink>
+            <DirectionsButton className={buttonClass("outline", "bg-navy-deep/55 backdrop-blur-sm max-sm:order-2 lg:px-5")}>
+              <Pin size={19} />
+              <span>Cómo llegar</span>
+            </DirectionsButton>
           </div>
         </div>
       </div>

@@ -4,7 +4,6 @@
  * Los productos y precios están en lib/menu.ts.
  *
  * PENDIENTE DE COMPLETAR por el negocio:
- *  - `city`: la carta no dice la ciudad. Al completarla, el enlace "Cómo llegar" la incluye.
  *  - `hours.days`: la carta dice 5 p. m. a 11 p. m., pero no qué días.
  *  - `social`: la carta no trae redes sociales. Cada red que agregues aparece en el pie de página.
  */
@@ -32,18 +31,19 @@ export const contact = {
     { display: "323 231 2013", tel: "+573232312013", whatsapp: false },
     { display: "321 843 0124", tel: "+573218430124", whatsapp: false },
   ],
-  address: "Calle 18 #2b-72",
+  /** Dirección del pin en Google Maps, confirmada por el negocio (la carta impresa dice #2b-72). */
+  address: "Calle 18 #2A-71",
   reference: "Frente al Colegio Pinillos",
-  city: "",
+  city: "Santa Cruz de Mompox, Bolívar",
+  /** Ubicación exacta del local: el botón "Cómo llegar" navega a este punto. */
+  geo: { lat: 9.2398828, lng: -74.4251669 },
   hours: { open: "5:00 p. m.", close: "11:00 p. m.", days: "" },
   social: [] as { label: string; href: string }[],
 };
 
+/** Web fallback for "Cómo llegar" (no JavaScript): Google Maps directions to the exact pin. */
 export function mapsUrl() {
-  const query = [contact.address, contact.reference.replace(/^Frente al /, "frente al "), contact.city]
-    .filter(Boolean)
-    .join(", ");
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${contact.geo.lat},${contact.geo.lng}`;
 }
 
 export const nav = [

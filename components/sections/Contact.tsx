@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import { contact, mapsUrl, video as videoConfig } from "@/lib/content";
+import { contact, video as videoConfig } from "@/lib/content";
 import { useReveals } from "@/lib/use-reveals";
 import { greetingMessage, whatsappUrl } from "@/lib/whatsapp";
 import { ButtonLink } from "@/components/ui/Button";
+import { DirectionsButton } from "@/components/ui/DirectionsButton";
 import { MaskedLines } from "@/components/ui/Heading";
 import { Clock, Phone, Pin, WhatsApp } from "@/components/ui/icons";
 
@@ -104,14 +105,9 @@ export function Contact() {
                 {contact.city && `, ${contact.city}`}
               </dd>
               <dd className="mt-3">
-                <a
-                  href={mapsUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[0.9375rem] font-bold text-pink underline decoration-2 underline-offset-4 hover:text-pink-soft"
-                >
-                  Cómo llegar<span className="sr-only"> (abre Google Maps en otra pestaña)</span>
-                </a>
+                <DirectionsButton className="text-[0.9375rem] font-bold text-pink underline decoration-2 underline-offset-4 hover:text-pink-soft">
+                  Cómo llegar
+                </DirectionsButton>
               </dd>
             </div>
           </dl>

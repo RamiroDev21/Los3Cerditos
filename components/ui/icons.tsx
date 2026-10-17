@@ -108,3 +108,28 @@ export function Star({ size = 14, ...rest }: IconProps) {
     </svg>
   );
 }
+
+export const Car = (p: IconProps) => (
+  <Line {...p}>
+    <path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5" />
+    <path d="M4 12h16v4.5H4z" />
+    <circle cx="7.5" cy="18" r="1.5" />
+    <circle cx="16.5" cy="18" r="1.5" />
+  </Line>
+);
+
+export const MapFold = (p: IconProps) => (
+  <Line {...p}>
+    <path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2-6-2Z" />
+    <path d="M9 4.5v13M15 6.5v13" />
+  </Line>
+);
+
+export const Apps = (p: IconProps) => (
+  <Line {...p}>
+    <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+    <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+    <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+    <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+  </Line>
+);
