@@ -9,10 +9,12 @@
  *  - `social`: la carta no trae redes sociales. Cada red que agregues aparece en el pie de página.
  */
 
+import { asset } from "./asset";
+
 export const brand = {
   name: "Los Tres Cerditos",
   fullName: "Los Tres Cerditos Restaurante",
-  logo: { src: "/brand/logo-los-tres-cerditos.png", width: 277, height: 242 },
+  logo: { src: asset("/brand/logo-los-tres-cerditos.png"), width: 277, height: 242 },
   slogan: "Sabemos lo que es comer bien, siempre querrás más, volverás por más.",
   specialties: ["Hamburguesa", "Desgranado", "Salchipapa", "Perro Caliente"],
 } as const;
@@ -53,7 +55,7 @@ export const nav = [
 ] as const;
 
 export const video = {
-  src: "/video/burgervideo.mp4",
+  src: asset("/video/burgervideo.mp4"),
   fps: 24,
   /** The burger reaches its widest separation at ~4s, then reassembles. Scroll maps 0 → explodeEnd. */
   explodeEnd: 4,

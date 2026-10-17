@@ -21,6 +21,8 @@ const description =
   "Hamburguesas de carne artesanal, chuzos desgranados, salchipapas, perros calientes y asados al carbón. Mira la carta y haz tu pedido por WhatsApp.";
 
 export const metadata: Metadata = {
+  // Set by the GitHub Pages workflow so share previews resolve to the real domain.
+  metadataBase: process.env.SITE_URL ? new URL(process.env.SITE_URL) : undefined,
   title: `${brand.fullName} — Carta y pedidos`,
   description,
   openGraph: {
