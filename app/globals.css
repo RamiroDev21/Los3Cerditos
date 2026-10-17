@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+@theme {
+  /* Sampled from the logo's own ground, so the logo sits on the page without a seam. */
+  --color-navy: #100a5c;
+  --color-navy-raised: #1b1577;
+  --color-navy-line: #2d2690;
+  /* Hero ground: the video's slate screened with deep blue (see Hero). */
+  --color-night: #100f43;
+  --color-navy-deep: #08062e;
+  --color-pink: #f28ca8;
+  --color-pink-deep: #e56a8f;
+  --color-pink-soft: #fbd5df;
+  --color-paper: #ffffff;
+  --color-paper-2: #f3f2fb;
+  --color-lilac: #c7c3ee;
+  --color-lilac-dim: #9d98d6;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-kalam), "Segoe Print", cursive;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-navy);
+    color: var(--color-paper);
+    color-scheme: dark;
+    scrollbar-color: var(--color-pink) var(--color-navy-deep);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-navy);
+    font-family: var(--font-sans);
+    font-variation-settings: "wdth" 100;
+    overflow-x: clip;
+    caret-color: var(--color-pink);
+  }
+
+  ::selection {
+    background: var(--color-pink);
+    color: var(--color-navy);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-pink);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  .on-paper :focus-visible {
+    outline-color: var(--color-navy);
+  }
+
+  a {
+    text-underline-offset: 0.22em;
+    text-decoration-thickness: 1px;
+  }
+
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+@layer components {
+  /* Condensed heavy cut of Archivo — the voice of the logo's banner lettering. */
+  .font-display {
+    font-family: var(--font-sans);
+    font-variation-settings: "wdth" 62;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.01em;
+  }
+
+  /* Hand-lettered category titles, as on the printed carta. */
+  .font-script {
+    font-family: var(--font-script);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  /* Wide caps used for item names on the carta. */
+  .font-item {
+    font-family: var(--font-sans);
+    font-variation-settings: "wdth" 112;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+
+  .label {
+    font-family: var(--font-sans);
+    font-variation-settings: "wdth" 100;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Dotted leader between a name and its price, like the printed carta. */
+  .leader {
+    flex: 1 1 1.5rem;
+    min-width: 1.5rem;
+    align-self: last baseline;
+    border-bottom: 2px dotted currentColor;
+    opacity: 0.35;
+    transform: translateY(-0.28em);
+  }
+
+  /* Brush-corner brackets that frame the printed carta's sheet. */
+  .sheet-corners {
+    position: relative;
+  }
+  .sheet-corners::before,
+  .sheet-corners::after {
+    content: "";
+    position: absolute;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-color: var(--color-navy);
+    pointer-events: none;
+  }
+  @media (max-width: 767px) {
+    .sheet-corners::before,
+    .sheet-corners::after {
+      display: none;
+    }
+  }
+  .sheet-corners::before {
+    bottom: 0.85rem;
+    left: 0.85rem;
+    border-bottom: 3px solid;
+    border-left: 3px solid;
+  }
+  .sheet-corners::after {
+    right: 0.85rem;
+    bottom: 0.85rem;
+    border-right: 3px solid;
+    border-bottom: 3px solid;
+  }
+
+  /* Mask used by line-by-line text reveals. */
+  .line-mask {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+    margin-bottom: -0.08em;
+  }
+
+  .line-mask > span {
+    display: block;
+    will-change: transform;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 100;
+    background: var(--color-pink);
+    color: var(--color-navy);
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    transition: top 0.2s var(--ease-out-expo);
+  }
+
+  .skip-link:focus {
+    top: 1rem;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Hero copy waits for its intro only when JS is running (class set inline in <head>). */
+.js [data-intro] {
+  visibility: hidden;
+}
+
+@keyframes fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(200%);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.96);
+  }
+}
+
+/* The order dialog is modal: keep the page behind it still. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
