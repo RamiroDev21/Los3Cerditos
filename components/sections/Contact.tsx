@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import Image from "next/image";
+import { useRef } from "react";
 import { contact, mapsUrl, video as videoConfig } from "@/lib/content";
 import { useReveals } from "@/lib/use-reveals";
 import { greetingMessage, whatsappUrl } from "@/lib/whatsapp";
@@ -9,44 +10,12 @@ import { MaskedLines } from "@/components/ui/Heading";
 import { Clock, Phone, Pin, WhatsApp } from "@/components/ui/icons";
 
 /**
- * Orders, delivery and where to find them. Bookends the hero with the same
- * footage frozen on its fully exploded frame — attached only when the section
- * gets close, seeked once, never played.
+ * Orders, delivery and where to find them. Bookends the hero with the burger
+ * fully exploded — a still cut from the same footage (no video to load or decode).
  */
 export function Contact() {
   const ref = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   useReveals(ref);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    const section = ref.current;
-    if (!v || !section) return;
-
-    const freeze = () => {
-      v.pause();
-      v.currentTime = videoConfig.explodeEnd;
-    };
-    const showFrame = () => v.classList.remove("opacity-0");
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        io.disconnect();
-        v.addEventListener("loadedmetadata", freeze, { once: true });
-        v.addEventListener("seeked", showFrame, { once: true });
-        v.src = videoConfig.src;
-        v.load();
-      },
-      { rootMargin: "800px 0px" },
-    );
-    io.observe(section);
-    return () => {
-      io.disconnect();
-      v.removeEventListener("loadedmetadata", freeze);
-      v.removeEventListener("seeked", showFrame);
-    };
-  }, []);
 
   const hours = [contact.hours.days, `${contact.hours.open} a ${contact.hours.close}`].filter(Boolean).join(", ");
 
@@ -54,15 +23,14 @@ export function Contact() {
     <section id="contacto" ref={ref} aria-labelledby="contacto-title" className="relative isolate overflow-hidden bg-night">
       <div className="absolute inset-0 -z-10 overflow-hidden bg-[#100f0e]" aria-hidden>
         {/* Oversized and top-anchored so the source's bottom strip stays out of frame. */}
-        <video
-          ref={videoRef}
-          className="absolute top-[2%] left-1/2 h-auto w-[190%] max-w-none -translate-x-1/2 opacity-0 transition-opacity duration-[1500ms] md:w-[130%] lg:left-[68%] lg:w-[95%]"
-          muted
-          playsInline
-          preload="none"
-          disablePictureInPicture
-          disableRemotePlayback
-          tabIndex={-1}
+        <Image
+          src={videoConfig.exploded}
+          alt=""
+          width={videoConfig.crop.w}
+          height={videoConfig.crop.h}
+          unoptimized
+          loading="lazy"
+          className="absolute top-[2%] left-1/2 h-auto w-[190%] max-w-none -translate-x-1/2 md:w-[130%] lg:left-[68%] lg:w-[95%]"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,15,14,0.15)_0%,rgba(16,15,14,0.35)_25%,rgba(16,15,14,0.98)_42%)] md:bg-[linear-gradient(180deg,rgba(16,15,14,0.15)_0%,rgba(16,15,14,0.4)_35%,rgba(16,15,14,0.98)_55%)] lg:bg-[linear-gradient(90deg,rgba(16,15,14,0.97)_0%,rgba(16,15,14,0.85)_38%,rgba(16,15,14,0.1)_70%)]" />
         <div className="absolute inset-0 bg-[#000038] mix-blend-screen" />

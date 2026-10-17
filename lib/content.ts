@@ -56,6 +56,20 @@ export const nav = [
 
 export const video = {
   src: asset("/video/burgervideo.mp4"),
+  /** First frame, full size: shown before (or instead of) the video, on every browser. */
+  poster: asset("/video/poster.webp"),
+  /** Fully exploded frame, cropped like the hero (no watermark strip): the still behind Contacto. */
+  exploded: asset("/video/exploded.webp"),
+  /**
+   * Phones and tablets scrub these stills instead of decoding the video: one per 2 video
+   * frames over 0–4s (49 total), 720×371, watermark strip cropped, night tint baked in.
+   */
+  phoneFrames: {
+    count: 49,
+    width: 720,
+    height: 371,
+    url: (i: number) => asset(`/video/frames/m-${String(i).padStart(3, "0")}.webp`),
+  },
   fps: 24,
   /** The burger reaches its widest separation at ~4s, then reassembles. Scroll maps 0 → explodeEnd. */
   explodeEnd: 4,

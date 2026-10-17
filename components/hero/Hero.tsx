@@ -9,7 +9,8 @@ import { getPerfTier, prefersReducedMotion } from "@/lib/device";
 import { FrameSequence, supportsFrameCapture } from "@/lib/frame-sequence";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { heroState } from "@/lib/scroll-store";
-import { computeFrameRect, ScrubRenderer } from "@/lib/scrub-renderer";
+import { ImageSequence } from "@/lib/image-sequence";
+import { computeFrameRect, NIGHT, ScrubRenderer } from "@/lib/scrub-renderer";
 import { ButtonLink } from "@/components/ui/Button";
 import { ArrowRight, Pin, WhatsApp } from "@/components/ui/icons";
 import { LayerLegend } from "./LayerLegend";
@@ -77,7 +78,7 @@ export function Hero() {
       }
 
       if (reduced) {
-        // Static composition: assembled burger (native first frame), legend visible, no pin.
+        // Static composition: assembled burger (the video's poster), legend visible, no pin.
         gsap.set(q("[data-legend], [data-legend-scrim]"), { autoAlpha: 1 });
         return;
       }
@@ -86,35 +87,11 @@ export function Hero() {
       const step = 2;
       const proxy = { p: 0 };
       let seq: FrameSequence | null = null;
+      let phoneSeq: ImageSequence | null = null;
       let renderer: ScrubRenderer | null = null;
       let disposed = false;
 
-      // Fallback path (no requestVideoFrameCallback): throttled native seeking.
-      let seeking = false;
-      let pendingTime: number | null = null;
-      const seekTo = (t: number) => {
-        if (seeking) {
-          pendingTime = t;
-          return;
-        }
-        if (Math.abs(video.currentTime - t) < 1 / (fps * 2)) return;
-        seeking = true;
-        video.currentTime = t;
-      };
-      const onSeeked = () => {
-        seeking = false;
-        if (pendingTime !== null) {
-          const t = pendingTime;
-          pendingTime = null;
-          seekTo(t);
-        }
-      };
-
-      const paint = () => {
-        const t = timeAt(proxy.p);
-        if (renderer) renderer.render((t * fps) / step);
-        else seekTo(t);
-      };
+      const paint = () => renderer?.render((timeAt(proxy.p) * fps) / step);
 
       const meterFill = q("[data-meter-fill]")[0] as HTMLElement | undefined;
       const readout = q("[data-readout]")[0] as HTMLElement | undefined;
@@ -186,25 +163,47 @@ export function Hero() {
         )
         .fromTo(q("[data-caption] > *"), { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.12, stagger: 0.04, ease: "power2.out" }, 0.84);
 
-      // ——— Frame cache ———
+      // ——— Frames ———
+      // Phones, tablets and browsers that cannot hand over video frames (iOS Safari) scrub
+      // pre-rendered stills: no video decoding, one draw per frame, tint already baked in.
+      const startPhoneFrames = contextSafe!(() => {
+        const { count, width, height, url } = videoConfig.phoneFrames;
+        const ps = new ImageSequence(Array.from({ length: count }, (_, i) => url(i)), width, height);
+        phoneSeq = ps;
+        ps.load(() => {
+          if (disposed) return;
+          if (!renderer) {
+            renderer = new ScrubRenderer(canvas, ps, 1.25, NIGHT, false);
+            renderer.resize();
+            canvas.style.visibility = "visible";
+            video.style.visibility = "hidden";
+            // Frames carry the tint: drop the live blend layer and switch the scrims to the tinted ground.
+            root.current!.dataset.tier = "low";
+          }
+          renderer.render((timeAt(proxy.p) * fps) / step, true);
+        });
+      });
+
       const start = contextSafe!(() => {
-        if (!supportsFrameCapture(video)) {
-          video.addEventListener("seeked", onSeeked);
-          paint();
+        if (tier === "low" || !supportsFrameCapture(video)) {
+          startPhoneFrames();
           return;
         }
+        // Desktop: decode the video once into an in-memory frame cache.
+        video.preload = "auto";
+        video.src = videoConfig.src;
         seq = new FrameSequence(video, {
           fps,
           endTime: videoConfig.explodeEnd,
           step,
-          maxWidth: tier === "low" ? 720 : 1280,
+          maxWidth: 1280,
           crop,
         });
         const s = seq;
         s.capture((slot) => {
           if (disposed) return;
           if (slot === 0 && !renderer) {
-            renderer = new ScrubRenderer(canvas, s, tier === "low" ? 1.25 : 1.5);
+            renderer = new ScrubRenderer(canvas, s, 1.5);
             renderer.resize();
             canvas.style.visibility = "visible";
           }
@@ -221,11 +220,13 @@ export function Hero() {
           })
           .catch(() => {
             if (disposed) return;
-            // Capture failed (e.g. playback blocked by power saving): fall back to seeking.
+            // Capture failed (e.g. playback blocked by power saving): use the stills instead.
+            seq?.dispose();
+            seq = null;
             renderer = null;
-            canvas.style.visibility = "hidden";
-            video.addEventListener("seeked", onSeeked);
-            paint();
+            video.removeAttribute("src");
+            video.load();
+            startPhoneFrames();
           });
       });
       start();
@@ -246,8 +247,8 @@ export function Hero() {
         disposed = true;
         ro.disconnect();
         io.disconnect();
-        video.removeEventListener("seeked", onSeeked);
         seq?.dispose();
+        phoneSeq?.dispose();
         renderer = null;
         heroState.progress = 0;
       };
@@ -260,17 +261,18 @@ export function Hero() {
       id="top"
       ref={root}
       aria-labelledby="hero-title"
-      className="relative isolate h-svh min-h-[600px] w-full overflow-hidden bg-night"
+      style={{ "--slate": "16,15,14" } as React.CSSProperties}
+      className="group/hero relative isolate h-svh min-h-[600px] w-full overflow-hidden bg-night data-[tier=low]:[--slate:16,15,67]"
     >
       {/* Stage: the burger. Starts below the fixed header so the top bun is never hidden. */}
-      <div ref={stage} className="absolute inset-x-0 top-[4.5rem] bottom-0 -z-10 bg-[#100f0e] md:top-[5.25rem]" aria-hidden>
+      <div ref={stage} className="absolute inset-x-0 top-[4.5rem] bottom-0 -z-10 bg-[rgb(var(--slate))] md:top-[5.25rem]" aria-hidden>
         <video
           ref={videoRef}
           className="absolute max-w-none [mask-composite:intersect] [mask-image:linear-gradient(90deg,transparent,#000_20%,#000_80%,transparent),linear-gradient(180deg,transparent,#000_11%,#000_62%,transparent_92%)]"
-          src={videoConfig.src}
+          poster={videoConfig.poster}
           muted
           playsInline
-          preload="auto"
+          preload="none"
           disablePictureInPicture
           disableRemotePlayback
           tabIndex={-1}
@@ -278,15 +280,15 @@ export function Hero() {
         <canvas ref={canvasRef} className="invisible absolute inset-0 h-full w-full" />
         {embers && <Embers />}
         {/* Scrims: keep type legible over the studio backdrop and melt the stage into the page. */}
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(16,15,14,0.72)_0%,rgba(16,15,14,0.35)_32%,rgba(16,15,14,0)_52%)] max-[899px]:hidden" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(var(--slate),0.72)_0%,rgba(var(--slate),0.35)_32%,rgba(var(--slate),0)_52%)] max-[899px]:hidden" />
         <div
           data-legend-scrim
-          className="invisible absolute inset-0 bg-[linear-gradient(270deg,rgba(16,15,14,0.85)_0%,rgba(16,15,14,0.45)_18%,rgba(16,15,14,0)_34%)] max-[899px]:hidden"
+          className="invisible absolute inset-0 bg-[linear-gradient(270deg,rgba(var(--slate),0.85)_0%,rgba(var(--slate),0.45)_18%,rgba(var(--slate),0)_34%)] max-[899px]:hidden"
         />
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#100f0e]/70 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#100f0e] via-[#100f0e]/60 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[rgba(var(--slate),0.7)] to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[rgb(var(--slate))] via-[rgba(var(--slate),0.6)] to-transparent" />
         {/* Night tint: screens the video's grey slate into the brand's deep blue while barely touching the food's highlights. */}
-        <div className="absolute inset-0 bg-[#000038] mix-blend-screen" />
+        <div className="absolute inset-0 bg-[#000038] mix-blend-screen group-data-[tier=low]/hero:hidden" />
         {/* Hand-off to the navy page below. */}
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-navy" />
       </div>

@@ -10,6 +10,8 @@
  * play; the canvas only ever shows the frame their scroll position asks for.
  */
 
+import type { Frames } from "./image-sequence";
+
 export type Crop = { x: number; y: number; w: number; h: number };
 
 export type FrameSequenceOptions = {
@@ -37,7 +39,7 @@ export function supportsFrameCapture(video: HTMLVideoElement): boolean {
   );
 }
 
-export class FrameSequence {
+export class FrameSequence implements Frames {
   readonly count: number;
   readonly width: number;
   readonly height: number;

@@ -1,9 +1,13 @@
-import type { FrameSequence } from "./frame-sequence";
+import type { Frames } from "./image-sequence";
 
 export type Rect = { x: number; y: number; w: number; h: number };
 
 /** Page ink — sampled from the slate at the bottom of the video so edges dissolve cleanly. */
-export const INK = "#100f0e";
+export const INK: Rgb = [16, 15, 14];
+/** The same slate after the night tint (baked into the pre-rendered phone frames). */
+export const NIGHT: Rgb = [16, 15, 67];
+
+export type Rgb = readonly [number, number, number];
 
 /** The burger is ~56% of the source frame's width, centred. */
 const BURGER_W = 0.56;
@@ -49,8 +53,12 @@ export class ScrubRenderer {
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private seq: FrameSequence,
+    private seq: Frames,
     private maxDpr = 1.5,
+    /** Ground colour the frame edges melt into. */
+    private ink: Rgb = INK,
+    /** Cross-fade neighbouring frames (smoother, but two draws per frame — off on phones). */
+    private crossfade = true,
   ) {
     const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
     if (!ctx) throw new Error("2D canvas unavailable");
@@ -74,7 +82,9 @@ export class ScrubRenderer {
 
   /** `pos` is a fractional frame index; neighbouring frames are cross-faded for sub-frame smoothness. */
   render(pos: number, force = false) {
-    const clamped = Math.max(0, Math.min(this.seq.count - 1, pos));
+    let clamped = Math.max(0, Math.min(this.seq.count - 1, pos));
+    // Without cross-fading only whole frames exist: snap, and skip the draw when it would not change.
+    if (!this.crossfade) clamped = Math.round(clamped);
     if (!force && Math.abs(clamped - this.lastPos) < 0.004) return;
     const a = Math.floor(clamped);
     const t = clamped - a;
@@ -83,12 +93,12 @@ export class ScrubRenderer {
     this.lastPos = clamped;
 
     const { ctx, rect } = this;
-    ctx.fillStyle = INK;
+    ctx.fillStyle = `rgb(${this.ink.join(",")})`;
     ctx.fillRect(0, 0, this.cssW, this.cssH);
     ctx.globalAlpha = 1;
     ctx.drawImage(fa, rect.x, rect.y, rect.w, rect.h);
 
-    if (t > 0.02 && this.seq.has(a + 1)) {
+    if (this.crossfade && t > 0.02 && this.seq.has(a + 1)) {
       const fb = this.seq.get(a + 1);
       if (fb && fb !== fa) {
         ctx.globalAlpha = t;
@@ -122,7 +132,7 @@ export class ScrubRenderer {
       for (let i = 0; i <= 8; i++) {
         const u = i / 8;
         const a = fromInk ? 1 - u * u * (3 - 2 * u) : u * u * (3 - 2 * u);
-        g.addColorStop(u, `rgba(16,15,14,${a.toFixed(3)})`);
+        g.addColorStop(u, `rgba(${this.ink.join(",")},${a.toFixed(3)})`);
       }
     };
     const edge = (x0: number, y0: number, x1: number, y1: number, fromInk: boolean, box: [number, number, number, number]) => {
